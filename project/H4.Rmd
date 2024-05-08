@@ -1,0 +1,173 @@
+---
+title: "HV4"
+author: "xxx"
+date: "2024-02-21"
+output:
+  rmdformats::downcute:
+    lightbox: true
+    gallery: true
+    highlight: tango
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(tidyverse)
+```
+
+```{r, echo=FALSE}
+dat <- read.table("spurningar_um_lifid_24.csv", header = T, sep=";", stringsAsFactors= T)
+
+dat <- mutate(dat,dyr = factor(dyr))
+dat <- mutate(dat,namskeid = factor(namskeid))
+```
+# Liður 1
+```{r, warning=FALSE}
+ggplot(dat, aes(x = dyr)) + 
+  geom_bar(fill = "lightgreen", color = "black") +
+  geom_text(stat='count', aes(label=..count..), vjust=-0.5, position=position_stack(vjust=0.5)) +
+  theme_minimal() + 
+  labs(title = "Dreifing svara í 'dyr' ",
+       x = "Flokkur", 
+       y = "Tíðni svars")
+```
+
+Vinsælasti flokkurinn er hundur
+
+```{r,warning=FALSE}
+
+binom.test(x = 156, n = 246, p = 0.5, alternative = "two.sided", conf.level = 0.95)
+
+```
+
+
+$H_0 : p = 0.5$ þýðir að núlltilgáta segir að dreifingin sé 50/50 dreifing. Sem hún er ekki í okkar samhengi því 95% öryggisbilið okkar er frá 0.5705921 til 0.6944248
+
+# Liður 2
+
+```{r}
+ggplot(dat, aes(x = dyr)) +
+  geom_bar(fill = "skyblue", color = "black") +
+  geom_text(stat='count', aes(label=..count..), vjust=-0.5, position=position_stack(vjust=0.5)) +
+  facet_grid(~namskeid) +
+  theme_minimal() +
+  labs(title = "Dreifing svara í 'dýr' eftir 'namskeid'",
+       x = "Flokkar",
+       y = "Tíðni svars")
+
+
+
+p_hattur1 <- 98/(98+44)
+p_hattur2<- 58/(58+46)
+```
+Fáum að $\hat{p}_1$ = `r p_hattur1`
+og að $\hat{p}_2$ = `r p_hattur2`
+
+
+$p$ táknar allmennt hlutfall mælinga þegar flokkabreyta tekur ákveðið gildi.
+$p_1$ lýsir þessu hlutfalli í öllu þýðinu.
+$\hat{p}_1$ lýsir aðeins þessu hlutfalli í úrtaki okkar.
+
+Núlltilgátan $H_0 : p_1 = p_2$ segir að enginn munur sé á hlutföllum eða tíðni útkomunnar milli þessara tveggja hópa.
+
+```{r}
+X1 <- 98  # Fjöldi þeirra sem velja hund í stæ203
+n1 <- 142 # Fjöldi í stæ203
+X2 <- 58  # Fjöldi þeirra sem velja hund í stæ209
+n2 <- 104 #Fjöldi í stæ209
+
+Pb <- (X1 + X2) / (n1 + n2)
+SE <- sqrt(Pb * (1 - Pb) * (1/n1 + 1/n2))
+
+# Reiknum Z með þessum tölum:
+Z <- (X1/n1 - X2/n2) / SE
+
+p1 <- X1/n1 
+p2 <- X2/n2
+
+standard_error <- sqrt(p1*(1-p1)/n1 + p2*(1-p2)/n2)
+margin_of_error <- 1.96 * standard_error
+
+# Reiknum efri og neðri mörk mismuns þá sem:
+lower_bound <- (p1 - p2) - margin_of_error
+upper_bound <- (p1 - p2) + margin_of_error
+
+prop.test(table(dat$namskeid, dat$dyr))
+```
+Fáum efri og neðri mörk fyrir mismun hlutfallana með 95% öryggisbili. Fáum (`r lower_bound`, `r upper_bound`). Hlutlausa tilvikið p1 = p2 er jafngilt því að p1 − p2 = 0. Gildið 0 er
+ekki á bilinu (`r lower_bound`, `r upper_bound`) og þar með getum hafnað núlltilgátunni og ályktað að nemendur í STÆ209G eru ekki jafn miklir hunda aðdáendur og þeir í STÆ203G.
+
+Aukalega fáum við $Z$ = `r Z`. Aukalega vitum við að fyrir 95% öryggisbil er $z_{1-\alpha/2}$=1.96 og þar sem `r Z` > 1.96  => $Z > z_{1-\alpha/2}$  er gagtilgátan $H_1 : p_1 \neq p_2$  sönn og þar með getum við neitað núlltilgátuni $H_0 : p_1 = p_2$. Því getum við aftur ákyktað að nemendur í STÆ209G eru ekki jafn miklir hunda aðdáendur og þeir í STÆ203G.
+
+
+# Liður 3: Tveggja úrtaka tilgátupróf
+Skoðið núna tvær nýjar flokkabreytur úr spurningalistanum *Handahófskenndar spurningar um lífið*.
+
+ 1. *Teiknið graf sem lýsir samspili þessara tveggja breyta.*
+ 
+ 2. *Framkvæmið viðeigandi tilgátupróf til að kanna hvort það séu tengsl milli þessara tveggja breyta.*
+ 
+ 3. *Túlkið niðurstöðuna.*
+ 
+ Við ætlum að skoða spurningarnar "Ertu feministi?" og "Borðaðiru morgunmat?". Köllum þá sem svöruðu fyrri spurningunni játandi feminista og neitandi jafnréttissinna. 
+ 
+```{r}
+dat <- read.table("spurningar_um_lifid_24.csv", header = TRUE, sep = ";", dec = ",", stringsAsFactors = T)
+
+dat$feministi <- factor(dat$feministi)
+dat$morgunmatur <- factor(dat$morgunmatur)
+
+
+ggplot(dat, aes(x = feministi, fill = morgunmatur)) +
+  geom_bar(position = "dodge", stat = "count") +
+  labs(title = "Hvernig morgunmatsát skiptist milli feminista og jafnréttissinna",
+       x = "Ertu feministi?",
+       y = "Fjöldi",
+      fill = "Borðaðiru morgunmat?") +
+  theme_minimal()
+```
+
+```{r include=FALSE}
+feministi <- sum(dat$feministi == "Rétt")
+jafnrettissinni <- sum(dat$feministi == "Rangt")
+feministi_morgunmatur_rett <- sum(dat$morgunmatur == "Rétt" & dat$feministi == "Rétt")
+jafnrettissinni_morgunmatur_rett <- sum(dat$morgunmatur == "Rangt" & dat$feministi == "Rétt")
+
+dat$feministi <- factor(dat$feministi, labels = c("jafnrettissinni", "feministi"))
+dat$morgunmatur <- factor(dat$morgunmatur, labels = c("borðar ekki morgunmat", "borðar morgunmat"))
+
+```
+
+
+Notum tvíhliða tilgátupróf með $\alpha = 0,05$. Tilgáturnar eru
+
+$$H_0: p_1 = p_2$$
+$$H_1: p_1 \neq p_2$$
+Athugum hlutföllin:
+
+```{r}
+prop.table(table(dat$morgunmatur, dat$feministi),margin=2)
+table(dat$morgunmatur, dat$feministi)
+```
+
+Notum nú prop.test til að framkvæma tilgátupróf:
+
+```{r}
+prop.test(table(dat$feministi, dat$morgunmatur))
+
+```
+
+Fyrst sjáum við að prófstærðin er $0.072934$, sem fylgir kí-kvaðrat prófi með $1$ frígráðu og $p$-gildi tilgátuprófsins er $0.7871$.
+
+Næst sjáum við hver gagntilgáta tilgátuprófsins er og þar á eftir $95\%$ öryggisbil fyrir mismun hlutfallanna sem reyndist $[-0.1457488,   0.2219624]$.
+
+Athugum að $0 \in [-0.1457488,   0.2219624]$ svo við samþykkjum $H_0$ og ályktum að ekki sé munur á hlutföllum feminista og jafnréttissinna sem borða morgunmat miðað við $\alpha = 5 \%$.
+
+
+# jafningjamat :)
+
+allir unnu jafnt og vorum öll mjög glöð frá byrjun til enda

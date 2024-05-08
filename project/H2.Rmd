@@ -1,0 +1,89 @@
+---
+title: "Hópverkefni 1"
+output: rmdformats::readthedown
+date: "2024-01-15"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE,  message = FALSE)
+library(tidyverse)
+```
+
+
+## Fyrra verkefni
+```{r}
+dat <- read.table("spurningar_um_lifid_24.csv", header=T, sep=";", dec = ",")
+dat$rektor_laun <- as.integer(dat$rektor_laun)
+
+dat <- mutate(dat, ferdamati_skoli= factor(ferdamati_skoli))
+dat <- mutate(dat, is = factor(is))
+dat <- mutate(dat, morgunmatur = factor(morgunmatur))
+dat <- mutate(dat, hljodfaeri = factor(hljodfaeri))
+
+dat$ferdamati_skoli <- factor(dat$ferdamati_skoli, levels=c("Með strætó", "Með einkabíl", "Gangandi / skokkandi", "Á hjóli / rafhlaupahjóli", "Á annan hátt"))
+dat$is <- factor(dat$is, levels=c("Vanilla", "Súkkulaði", "Jarðaberja"))
+dat$morgunmatur <- factor(dat$morgunmatur, levels=c("Rétt", "Rangt"))
+dat$hljodfaeri <- factor(dat$hljodfaeri, levels=c("Rétt", "Rangt"))
+dat$aramotaskaupid <- ifelse(dat$aramotaskaupid > 10 | dat$aramotaskaupid < 0, NA, dat$aramotaskaupid)
+dat$havaxnari <- ifelse(nchar(dat$havaxnari) > 12, NA, dat$havaxnari)
+dat$likamsraekt_dagar <- ifelse(dat$likamsraekt_dagar > 7 | dat$likamsraekt_dagar < 0, NA, dat$likamsraekt_dagar)
+dat$likamsraekt_dagar <- as.integer(dat$likamsraekt_dagar)
+dat$ferdatimi_skoli <- ifelse(dat$ferdatimi_skoli > 1440 | dat$ferdatimi_skoli < 0, NA, dat$ferdatimi_skoli)
+dat$ferdatimi_skoli <- as.integer(dat$ferdatimi_skoli)
+dat$messi_staerd <- ifelse(dat$messi_staerd > 210 | dat$messi_staerd < 110, NA, dat$messi_staerd)
+dat$rektor_laun <- ifelse(dat$rektor_laun > 6000000 | dat$rektor_laun < 450000, NA, dat$rektor_laun)
+dat$smjor_kostar <- ifelse(dat$smjor_kostar > 5000 | dat$smjor_kostar < 50, NA, dat$smjor_kostar)
+
+vantarsvarpp <- apply(dat, 1, function(x) sum(is.na(x)))
+ekkertsvar <- sum(vantarsvarpp == ncol(dat))
+allirsvar <- nrow(dat) - ekkertsvar
+
+dat_filtered <- dat[complete.cases(dat), ]
+
+```
+
+# Liður 1: Flokkabreyta
+
+```{r}
+ggplot(data = dat, aes(dat$is, fill = is)) + geom_bar() + labs(title = "Uppáhalds ís", x="Ísbragð", y="Magn svara") + scale_fill_manual(values = c("Vanilla" = "lightblue", "Súkkulaði" = "brown", "Jarðaberja" = "pink"))
+```
+
+Ljóst er að súkkulaði ís er lang vinsælastur, svo fylgir vanillu ís ekki langt á eftir. Jarðaberja ísinn er lang óvinsælastur.
+
+# Liður 2: Talnabreyta
+
+```{r}
+dat_filtered <- dat[!is.na(dat$likamsraekt_dagar), ]
+ggplot(data = dat_filtered, aes(x = as.factor(likamsraekt_dagar), fill = likamsraekt_dagar)) + geom_bar() + scale_fill_gradient(low = "lightgreen", high = "darkgreen") + labs(title = "Fjöldi daga í líkamsrækt á viku", x = "Dagar", y = "Magn svara")
+```
+
+Margir fara ekki í ræktina, en þeir sem fara fara u.þ.b. helminginn af vikunni.
+
+# Liður 3: Samband talnabreytu og flokkabreytu
+
+```{r}
+ggplot(data=dat, aes(x=ferdamati_skoli, y=ferdatimi_skoli)) + geom_boxplot() + labs(title = "Samband ferðamáta og ferðatími í skólann", x="Ferðamáti", y="Ferðatími")
+```
+
+Fólk sem fer í skólann á fæti eða annan hátt er fljótast, líklegast vegna þess að þau búa nálægt og þurfa ekki að vera í traffík.
+Svo sést að strætóinn er töluvert hægari en einkabíllinn.
+
+# Liður 4: Samband tveggja talnabreyta
+
+```{r}
+ggplot(data=dat, aes(x=dat$smjor_kostar,y=dat$messi_staerd)) + geom_point() + geom_smooth(method="lm", se=FALSE, color="blue") + labs(title = "Samband milli verðhugmynd smjörs og ágiskun á hæð Messis", x="Smjörverð", y="Hæð Messis")
+```
+
+Hér sést að það er engin ljós f'+
+
+
+
+
+
+
+++
+++ylgni milli ágiskun á hæð messi og hvað fólk heldur að smjör kosti.
+
+# Framlag
+
+Allir meðlimir hópsins lögðu sitt af mörkum við gerð verkefnisins

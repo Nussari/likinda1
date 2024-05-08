@@ -1,0 +1,103 @@
+---
+title: "Einstaklingsverkefni 4"
+output: rmdformats::readthedown
+date: "2024-03-13"
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE,  message = FALSE)
+library(tidyverse)
+library(stats)
+library(lubridate)
+```
+# Liður a
+Lesið gagnaskrána inn með eftirfarandi skipun:
+
+nafn_a_hlut <- read_csv2("https://www.skra.is/library/Skrar/kaupskra/kaupskra.csv", locale = locale(encoding = "ISO8859-1"))
+
+þar sem þið skiptið nafn_a_hlut út fyrir upphafsstafina ykkar (þó skal ekki nota íslenska stafi).
+
+Þið getið líka sótt skrána, vistað hana í vinnumöppunni ykkar og lesið hana inn með:
+
+nafn_a_hlut <- read_csv2("kaupskra.csv", locale = locale(encoding = "ISO8859-1"))
+```{r}
+ovd <- read_csv2("https://www.skra.is/library/Skrar/kaupskra/kaupskra.csv", locale = locale(encoding = "ISO8859-1"))
+```
+
+# Liður b
+Notið mutate() fallið til að búa til nýja breytu í gagnarammanum ykkar sem inniheldur fermetraverð eignanna, nefnið breytuna fermetraverd.
+```{r}
+ovd <- ovd %>% mutate(fermetraverd = kaupverd / einflm)
+```
+# Liður c
+Búið til nýja breytu í gagnarammanum ykkar sem inniheldur árið sem eignin var seld, nefnið breytuna ar (t.d. með að nota year() fallið í lubridate pakkanum).
+```{r}
+ovd <- ovd %>% mutate(ar =  year(ovd$utgdag) )
+```
+# Liður d
+Notið filter() skipunina til að velja fullbúnar eignir (sjá fullbuid breytuna), sem seldar voru árið 2022, eru "Fjolbyli" eða "Serbyli" og byggja á  samningum sem eru er nothæfir (sjá nothaefur breytuna). Yfirskrifið stóra gagnaramman með þessum eignum.
+```{r}
+ovd <- ovd %>% filter(ar == 2022, onothaefur_samningur==0, fullbuid==1, tegund %in% c("Fjolbyli", "Serbyli"))
+```
+# Liður e
+Veljið ykkur þrjú póstnúmer til að vinna með. Yfirskrifið gagnaramman í d) lið með eignum úr þessum þremur póstnúmerum. Þið skulið nota þennan gagnaramma í verkefninu.
+```{r}
+ovd <- ovd %>% filter(postnr %in% c("109","203","900"))
+```
+# Liður f
+Teiknið mynd sem sýnir stærð eignanna í rammanum ykkar (það eiga ekki að vera aðrar breytur á myndinni). Eru einhverjir gagnapunktar sem koma í ljós sem mögulega þarf að skoða sérstaklega? Ef svo er skulið þið gera það.
+```{r}
+ggplot(data=ovd, aes(einflm)) + geom_histogram(binwidth = 1)
+```
+Ekkert sérstakt sem þarf að skoða að mínu mati, allt lýtur nokkuð eðlilega út.
+
+# Liður g
+Teiknið mynd sem sýnir kaupverð eignanna í rammanum ykkar (það eiga ekki að vera aðrar breytur á myndinni). Eru einhverjir gagnapunktar sem koma í ljós sem mögulega þarf að skoða sérstaklega? Ef svo er skulið þið gera það
+```{r}
+ggplot(data=ovd, aes(kaupverd)) + geom_histogram(binwidth = 1000)
+```
+Gaman að sjá hvað gröfin tvö eru lík. En við þvi var nú að búast þar sem oft er mikil fylgni milli fermetra og kaupverð fasteignar.
+
+# Liður h
+Teiknið viðeigandi mynd sem sýnir breyturnar fermetraverd og postnr saman á einni mynd
+```{r}
+ovd$postnr <- as.factor(ovd$postnr)
+
+ggplot(data=ovd, aes(x=postnr, y=fermetraverd, fill = postnr)) + geom_boxplot() + labs(x="Póstnúmer", y="Fermetraverð", title="Samband milli póstnúmers og fermtraverðs") + scale_fill_manual(values = c("109" = "blue", "203" = "green","900" = "red"))
+```
+
+# Liður i
+Kannið með viðeigandi tilgátuprófi hvort munur sé á meðalfermetraverði fjölbýla í póstnúmerunum þremur sem þið völduð í lið e). Halda þær forsendur sem þurfa að gilda til að nota aðferðina sem þið beittuð? : Notum núlltilgátupróf, ss. að það sé enginn munur á meðatölunum.
+```{r}
+fervikstatus <- aov(fermetraverd ~ postnr, data = ovd)
+anova(fervikstatus)
+```
+Þar sem p er svona rosalega smá þá höfnum við núlltilgátunni
+Notum núlltilgátupróf
+
+# Liður j
+Teiknið viðeigandi mynd sem sýnir sambandið á milli stærðar og söluverðs eigna í póstnúmerunum. 
+```{r}
+ggplot(data = ovd, aes(x = einflm, y = kaupverd, color = postnr)) +
+  geom_point() +
+  labs(x = "Stærð", y = "Kaupverðið", title = "Samband milli kaupverðs og stærðar eignar")
+```
+
+# Liður k
+Smíðið línulegt líkan sem lýsir sambandinu á milli stærðar og kaupverðs eigna í póstnúmerunum.
+```{r}
+linear_model <- lm(kaupverd ~ einflm, data = ovd)
+
+
+summary(linear_model)
+```
+
+# Liður l
+```{r}
+leifar <- residuals(linear_model)
+
+# Diagnostic plots
+par(mfrow = c(2, 2))
+plot(leifar)
+```
+
+samkvæmt R-inu er 50.55% af breytileikanum í kaupverðinu er vegna stærðar eignarinnar. F-statistic gefur í skyn að forsendur líkansins halda. Að lokum ef við skoðum plotið þá sjáum við að þetta er línulegt og þar með getum við ályktað að forsendur líkansins standast.

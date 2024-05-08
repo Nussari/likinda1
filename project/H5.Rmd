@@ -1,0 +1,90 @@
+---
+title: "hopverk5"
+output: html_document
+date: "2024-03-13"
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE,  message = FALSE)
+library(tidyverse)
+library(stats)
+```
+#Liður 1
+```{r}
+dat <- read.csv("Rotten_Tomatoes_Movies.csv", sep = ",")
+
+lines <- nrow(dat)
+
+validRatings <- c("G", "PG", "PG-13", "R", "NR")
+
+dat <- dat[dat$rating %in% validRatings, ]
+
+deleted <- (lines - nrow(dat))
+
+dat$rating <- factor(dat$rating, validRatings, labels = c("Leyfð öllum", "Með foreldri","Bönnuð innan 13 ára","Bönnuð innan 17", "Ómetin"))
+```
+Það eru 
+```{r}
+deleted 
+```
+línur með röngu skráðu rating
+
+```{r}
+ggplot(data=dat, aes(x=rating, y=tomatometer_rating, fill=rating)) + geom_boxplot() + labs(x="Aldurstakmarkanir", y="Einkunn", title="Samband einkunnar og aldurstakmarkana") + scale_fill_manual(values = c("Leyfð öllum" = "green", "Með foreldri" = "orange","Bönnuð innan 13 ára" = "purple","Bönnuð innan 17" = "blue","Ómetin" = "black"))
+```
+Núlltilgátan sem við leggjum fram er sú að það er enginn munur á meðatölunum okkar.
+Prófum núlltilgátupróf með einþátta fervikagreiningu á meðaltölunum.
+```{r}
+fervik <- aov(tomatometer_rating ~ rating, data = dat)
+anova(fervik)
+```
+
+Þar sem p er svona rosalega smá tala þá höfnum við núlltilgátuprófinu og drögum ályktun að amk. eitt meðaltal er frábrugðið hinum. Gerum þá eftirápróf.
+```{r}
+TukeyHSD(fervik)
+plot(TukeyHSD(fervik))
+```
+
+p adj segir okkur að það er munur á öllum samanburðunum nema Ómetin-Leyfð öllum. Bönnuð innan 17-Með foreldri er með smá líkindi en ekkert til að taka mark á.
+#Liður 2
+```{r}
+dat <- read.csv("Rotten_Tomatoes_Movies.csv", sep = ",")
+
+
+validStatus <- c("Rotten", "Fresh", "Certified Fresh")
+
+dat <- dat[dat$tomatometer_status %in% validStatus, ]
+
+deletedstatus <- (lines - nrow(dat))
+
+dat$tomatometer_status <- factor(dat$tomatometer_status, validStatus, labels = c("Léleg", "Ágæt","Mjög góð"))
+```
+Það eru 
+```{r}
+deletedstatus
+```
+línur með röngu skráðu tomatometer status
+```{r}
+dat$runtime_in_minutes <- as.numeric(dat$runtime_in_minutes)
+```
+
+```{r}
+dat$runtime_in_minutes[dat$runtime_in_minutes > 1000] <- NA
+```
+
+```{r}
+ggplot(data=dat, aes(x=tomatometer_status, y=runtime_in_minutes, fill=tomatometer_status)) + geom_boxplot() + labs(x="Gæði myndar", y="Lengd", title="Samband milli gæði myndar og hversu löng hún er") + scale_fill_manual(values = c("Léleg" = "red", "Ágæt" = "white","Mjög góð" = "green"))
+```
+Núlltilgátan sem við leggjum fram er sú að það er enginn munur á meðatölunum okkar.
+Prófum núlltilgátupróf með einþátta fervikagreiningu á meðaltölunum.
+```{r}
+fervikstatus <- aov(runtime_in_minutes ~ tomatometer_status, data = dat)
+anova(fervikstatus)
+```
+
+Þar sem p er svona rosalega smá tala þá höfnum við núlltilgátuprófinu og drögum ályktun að amk. eitt meðaltal er frábrugðið hinum. Gerum þá eftirápróf.
+
+```{r}
+TukeyHSD(fervikstatus)
+plot(TukeyHSD(fervikstatus))
+```
+p adj segir okkur að það er munur á öllum samanburðunum nema Ágæt-Léleg. 

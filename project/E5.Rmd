@@ -1,0 +1,136 @@
+---
+title: "einstaklingsverkefnifimm"
+author: "lík og töl lover nr1"
+date: "2024-04-11"
+output:
+  rmdformats::readthedown:
+    lightbox: true
+    gallery: true
+    highlight: tango
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(knitr)
+library(tidyverse)
+library(stats)
+#options(warn = -1)
+```
+
+```{r, echo=FALSE}
+dat <- read.table("spurningar_um_lifid_24.csv", header = T, sep=";")
+dat <- mutate(dat, systkini_fjoldi = round(as.numeric(as.character(systkini_fjoldi))))
+#dat <- dat %>% filter(!is.na(systkini_fjoldi))
+dat <- mutate(dat,morgunmatur = factor(morgunmatur))
+```
+
+# 1
+## Stuðlarit
+```{r}
+ggplot(data = dat, aes(x = systkini_fjoldi)) +
+  geom_bar() +
+  labs(title = "Fjöldi systkina", x = "Systkini", y = "Tíðni") +
+  theme_minimal()
+```
+
+## t-test
+```{r}
+ t.test(dat$systkini_fjoldi, conf.level = 0.95)
+```
+
+## endurvals aðferðin
+```{r}
+endurvalsurtak <-replicate(1000, sample(dat$systkini_fjoldi, 100,replace=T))
+
+medaltol <- apply(endurvalsurtak,2,mean, na.rm=T)
+
+quantile(medaltol, c(0.025, 0.975))
+```
+
+## Túlkun
+
+### Eru bilin jafnbreið?
+Endurvalsaðferðin gaf talsvert breiðara bil
+
+### Eru bilin samhverf um meðaltal þess úrtaks sem þið hafið í höndunum?
+Meðaltalið úr upprunalegu gögnunum sem gefið er með t-prófinu er 2.559184.
+Öryggisbilin eru ekki fullkomlega samhverf hvort um sig miðað við þetta meðaltal, en t-prófið sýnir öryggisbil sem virðist vera þrengra og nær meðaltalinu miðað við úrtakið.
+
+### Ef þið sjáið mikinn mun, af hverju teljið þið að hann stafi?
+Endurvalsaðferðin gefur okkur breiðara öryggisbil. Þetta mun breiðara bil endurspeglar aukið óvissu sem kemur með því að notast við endurval (bootstrap) úrtak, þar sem aðferðin byggir á endurteknum sýnum úr upprunalegu gögnunum og getur því innifalið meiri breytileika.
+
+# 2
+
+## boxplot dreifinganna
+```{r}
+ggplot(data = dat, aes(x = morgunmatur, y = systkini_fjoldi, fill = morgunmatur)) +
+  geom_boxplot() +
+  labs(title = "Dreifing fjölda systkina eftir svari við morgunmatur", x = "Morgunmatur", y = "Fjöldi systkina") +
+  theme_minimal() +
+  scale_fill_manual(values = c("blue", "red"), labels = c("rétt", "rangt"))
+```
+
+## t-próf
+```{r}
+t.test(systkini_fjoldi ~ morgunmatur, data = dat)
+```
+
+### Núlltilgáta $H_0$
+Meðaltal fjölda systkina er það sama fyrir báða hópa, þ.e.a.s., munurinn á meðaltölum er 0.
+$H_0: p_1 = p_2$
+
+### Niðurstaða tilgátuprófsins
+Niðurstaða tilgátuprófsins er sú að það megi ekki hafna núlltilgátunni. Þar sem P-gildi er hærra en 0.05 og 95 percent confidence interval inniheldur 0.
+
+### Forsendur tilgátuprófsins
+Óháð úrtök: Gögnin í hverjum hópi (rétt/rangt fyrir morgunmatur) eru óháð hvert öðru.
+
+Eðlileg dreifing: Gögnin í hverjum hópi eru venjulega dreifð, sérstaklega þegar úrtakastærðir eru minni.
+
+-Þessi er lang líklegust til að vera brotin þar sem við völdum fjoldi_systkina sérstaklega því dreifingin var ekki normal
+
+Jafn dreifni: Dreifni (staðalfrávik) gögnanna í hópunum tveimur er áætlað að vera sambærileg.
+
+## umraðanapróf
+
+```{r}
+# Kóði frá chat skil ekkert í honum <3 <3 <3
+
+set.seed(123)
+
+actual_diff <- abs(mean(dat$systkini_fjoldi[dat$morgunmatur == "Rétt"]) - mean(dat$systkini_fjoldi[dat$morgunmatur == "Rangt"]))
+
+perm_diffs <- replicate(100000, {
+  shuffled <- sample(dat$systkini_fjoldi)
+  abs(mean(shuffled[dat$morgunmatur == "Rétt"]) - mean(shuffled[dat$morgunmatur == "Rangt"]))
+})
+
+p_value <- mean(perm_diffs >= actual_diff)
+
+cat("Raunverulegur mismunur:", actual_diff, "\n")
+cat("P-gildi:", p_value)
+```
+
+### Núlltilgáta $H_0$
+Núlltilgátan okkar er sú að það sé enginn munur á lýsistærðinni milli hópanna.
+$H_0: \mu_{rétt} - \mu_{rangt}= 0$
+
+
+### Túlkun
+Vegna þess hversu hátt p-gildið er, höfnum við ekki núlltilgátunni.
+
+
+## Mismunur þessara tveggja tilgátuprófa
+
+### p-gildi fyrra:
+0.7887
+
+### p-gildi seinna:
+0.81274
+
+### Mismunur
+
+Bæði p-gildin eru há og mjög svipuð. Sem stemmir svosem alveg þar sem bæði prófin eru að prófa sömu núlltilgátuna og fengu sömu niðurstöðu.

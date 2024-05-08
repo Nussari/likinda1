@@ -1,0 +1,140 @@
+---
+title: "prof1"
+author: "Óskar Víkingur Davíðsson"
+date: "2024-05-08"
+output: rmdformats::readthedown
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+dat <- read.table("https://ahj.hi.is/spurningar_um_lifid_24.csv", sep = ";", header = T, dec=",")
+
+```
+
+
+Breytan stefnumot hafði spurningatextann: “Hvert myndu þið fara á fyrsta stefnumót?”
+
+Teiknið viðeigandi graf til að lýsa úrtaksdreifingu breytunnar stefnumot. Vandið framsetningu. (3 stig)
+
+
+```{r}
+library(tidyverse)
+library(knitr)
+ggplot(dat, aes(x=stefnumot)) + 
+  geom_bar() +
+  xlab('Hvert myndu þið fara á fyrsta stefnumót?') + 
+  ylab('Fjöldi') + 
+  theme_classic()
+```
+
+Hér fæst 1 stig ef það er teiknað stöplarit. Annað til viðbótar ef að ásar eru merktir og það þriðja ef að þeir eru sérlega vel merktir eða eitthvað gert til að gera grafið fallegra en sjálfgefna stillingin.
+
+Hvert var algengast að nemendur myndu fara á fyrsta stefnumót? (1 stig)
+
+```{r}
+table(dat$stefnumot) %>% kable()
+```
+Það var algengast að nemendur myndu fara á ísrúnt.
+
+Hversu hátt hlutfall nemanda valdi þann valkost? (1 stig)
+```{r}
+table(dat$stefnumot) %>% prop.table() %>% kable()
+
+```
+43% nemenda völdu þann kost.
+
+#2 Breytan smjör kostar
+Breytan smjor_kostar hafði spurningatextann: “Hvað heldur þú að 500 gr af smjöri kosti í Bónus?”
+
+    Teiknið viðeigandi graf til að lýsa úrtaksdreifingu breytunnar smjor_kostar (1 stig)
+
+```{r}
+ggplot(dat, aes(x=smjor_kostar)) + 
+  geom_histogram() +
+  xlab('Hvað heldur þú að 500 gr af smjöri kosti í Bónus?') + 
+  ylab('Fjöldi') +
+  theme_classic()
+```
+Hér þarf bæði að teikna stöplarit og að merkja ása til að fá stig.
+
+    Lýsið lögun úrtaksdreifingarinnar (1 stig)
+
+Þetta er hægri skekkt einkryppudreifing
+
+    Reiknið viðeigandi lýsistærðir til að lýsa miðju og dreifð breytunnar smjor_kostar (2 stig)
+
+```{r}
+summary(dat$smjor_kostar)
+
+```
+Miðgildið er 596.5 og fjórðungamörkin eru 450, 742.75
+
+Það má gefa rétt fyrir aðrar lýsistærðir ef það er rökstutt í næsta lið. Þó ekki ef að lýsistærðinar passa ekki saman, t.d. miðgildi og dreifni.
+
+    Rökstyðjið hvers vegna þið völduð þessar lýsistærðir (1 stig)
+
+Breytan er mjög hægri skekkt og því er miðgildi betri mælikvarði en meðaltal. Hér má gefa rétt fyrir að nota aðrar lýsistærðir ef það fylgir góður rökstuðningur me ðþví.
+
+#3 Samband stefnumot og smjor_kostar
+Teiknið viðeigandi graf til að lýsa sambandi breytanna smjor_kostar og stefnumot. Vandið framsetningu (3 stig)
+```{r}
+ggplot(dat, aes(x=stefnumot, y=smjor_kostar)) +
+  geom_boxplot() + 
+  xlab('Hvert myndu þið fara á fyrsta stefnumót?') + 
+  ylab('Hvað heldur þú að 500 gr af smjöri kosti í Bónus?') + 
+  theme_classic()
+
+```
+Hér fæst 1 stig ef það er teiknað kassarit. Annað til viðbótar ef að ásar eru merktir og það þriðja ef að þeir eru sérlega vel merktir eða eitthvað gert til að gera grafið fallegra en sjálfgefna stillingin.
+
+    Reiknið sömu lýsistærð og þið notuðuð til að lýsa miðju úrtaksdreifingarinnar í lið 2, nema fyrir hvern og einn undirhóp nemenda, þ.e.a.s. reikna lýsistærðina bara með þeim sem vildu fara á ísrúnt, bara þeim sem vildu fara á kaffihús osfrv. Alls fjögur gildi. (2 stig)
+
+```{r}
+dat %>% group_by(stefnumot) %>% summarize(midgildi = median(smjor_kostar, na.rm=T)) %>% kable()
+
+```
+Eða
+```{r}
+tapply(dat$smjor_kostar, dat$stefnumot, median, na.rm=T) %>% kable()
+```
+Hér fæst eitt stig ef að sama lýsistærðin er notuð og í lið 2 eða þá ef önnur lýsistærð er rétt reiknuð fyrir alla hópa. 2 stig fást ef bæði er gert.
+#4 Samband messi_staerd og smjor_kostar
+Breytan messi_staerd hafði spurningatextann: “Hvað heldur þú að Messi sér stór (í cm)?”
+
+  Hversu margir nemendur svöruðu að Messi væri minna en 100 cm hár? (Breytan messi_staerd) (1 stig)
+
+```{r}
+table(dat$messi_staerd < 100) %>% kable()
+```
+Búið til nýtt gagnasafn þar sem þið eruð búin að fjarlægja svör þessara einstaklinga, sem og þeirra sem svöruðu ekki hvað þeir héldu að smjör kostaði (1 stig)
+```{r}
+dat1 <- filter(dat, messi_staerd > 100, !is.na(smjor_kostar))
+```
+
+  Teiknið viðeigandi graf til að lýsa sambandi breytanna smjor_kostar og messi_staerd í þessu nýja gagnasafni (2 stig)
+
+```{r}
+ggplot(dat1, aes(x=messi_staerd, y=smjor_kostar)) +
+  geom_point() + 
+  xlab("Hvað heldur þú að Messi sér stór (í cm)?") + 
+  ylab('Hvað heldur þú að 500 gr af smjöri kosti í Bónus') + 
+  theme_classic()
+
+```
+Hér fæst eitt stig ef það er teiknað punktarit og annað til viðbótar er ásar eru merktir.
+
+  Reiknið viðeigandi lýsistærð til að lýsa sambandi breytanna smjor_kostar og messi_staerd í þessu nýja gagnasafni (1 stig)
+
+
+```{r}
+cor(dat1$messi_staerd, dat1$smjor_kostar)
+```

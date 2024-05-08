@@ -1,0 +1,85 @@
+---
+title: "E3"
+author: "Óskar Víkingur Davíðsson"
+date: "2024-03-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+```{r}
+dat <- read_csv('NYC_subway_traffic.csv')
+
+```
+
+#Liður 1
+Liður 1: Fjöldi innstiga á tiltekna lestarstöð klukkan 08
+
+Breytan entries.08 lýsir fjölda innstiga í tiltekna lest á tiltekinni lestarstöð klukkan 08:00 um morgun.
+
+Veljið ykkur eina lestarstöð (Stop Name) og búið til minna gagnasafn með eingöngu mælingum frá þeirri lestarstöð.
+Teiknið graf sem sýnir fjölda innstiga klukkan 08 á þá lestarstöð.
+Reiknið meðalfjölda innstiga á þessa tilteknu lestarstöð ásamt 95% öryggisbili
+Lýsið útkomunni stuttlega
+
+```{r}
+hundadellefustreet <- filter(dat, `Stop Name` == "111 St")
+#Dataset með einu stoppi
+hundadellefustreet$entries.08 <- as.integer(hundadellefustreet$entries.08)
+#Graf
+ggplot(hundadellefustreet, aes(x = as.Date(date), y = entries.08)) +
+  geom_histogram(stat = "identity", fill = "blue", position = "dodge") +
+  labs(title = "Entries on 111 St over time",
+       x = "Date",
+       y = "Entries")
+#Meðaltal með öryggisbil 95%
+mean_entries <- mean(hundadellefustreet$entries.08)
+quantile(hundadellefustreet$entries.08, c(0.025, 0.975))
+```
+
+Þetta gefur okkur meðaltal fyrir 95% öryggisbil og mikilvægi þess þarf hver og einn að meta fyrir sjálfan sig.
+
+#Liður 2
+```{r}
+# Filtera dat fyrir fyrsta januar
+january <- filter(dat, `date` == "2021-01-01")
+january$entries.08 <- as.integer(january$entries.08)
+
+# Plota muninn á entries.08 milli "Subway" og "Elevated" Structures
+ggplot(january, aes(x = Structure, y = entries.08, fill = Structure)) +
+  geom_boxplot() +
+  labs(title = "Munurinn á Entries.08 milli Subway and Elevated Structures",
+       x = "Structure",
+       y = "Entries.08",
+       fill = "Structure")
+
+#Meðalinnstig 
+tapply(january$entries.08, january$Structure, mean, na.rm = TRUE)
+```
+"Getum við fullyrt að það sé munur": Til þess þurfum við að nota replicate 
+
+```{r}
+#Tilgátupróf
+t_test_result <- t.test(entries.08 ~ Structure, data = january)
+
+print(t_test_result)
+```
+Svo já við getum fullyrt að það sé munur á fjölda innstiga þar.
+
+#Liður 3
+```{r}
+#Búa til gagnasaft með eingöngu mælingum frá jackson Heights
+jacksonheights <- filter(dat, `Neighborhood` == "Jackson Heights")
+jacksonheights$entries.08 <- as.integer(jacksonheights$entries.08)
+jacksonheights$entries.16 <- as.integer(jacksonheights$entries.16)
+#Graf
+ggplot(jacksonheights, aes(x = entries.08, y = entries.16)) +
+  geom_point() +
+  labs(title = "Comparison of Entries at 08:00 vs. 16:00 in Jackson Heights",
+       x = "Entries at 08:00",
+       y = "Entries at 16:00")
+#Tilgátupróf
+t.test(jacksonheights$entries.08, jacksonheights$entries.16, paired = TRUE)
+```

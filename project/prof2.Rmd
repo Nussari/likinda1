@@ -1,0 +1,150 @@
+---
+title: "prof1"
+author: "Óskar Víkingur Davíðsson"
+date: "2024-05-08"
+output: rmdformats::readthedown
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+dat <- read_csv("https://ahj.hi.is/Rotten_Tomatoes_Movies.csv")
+
+```
+#Spurning 1
+Breytan audience_count lýsir því hvað kvikmyndadómar margra einstaklinga voru notaðir til að meta einkunn kvikmyndarinnar.
+
+  Teiknið viðeigandi graf til að lýsa úrtaksdreifingu breytunnar audience_count og lýsið lögun breytunnar (2 stig)
+
+
+
+```{r}
+library(tidyverse)
+
+ggplot(dat, aes(x=audience_count)) + 
+  geom_histogram() + 
+  theme_minimal()
+```
+
+Þetta er hægri skekkt einkryppudreifing.
+
+  Búið til nýja breytu með því að taka lógarithmann af audience_count og kallið hana log_audience_count (1 stig)
+
+```{r}
+dat <- dat %>%
+  mutate(log_audience_count = log(audience_count))
+```
+
+  Teiknið viðeigandi graf til að lýsa lögun þessarar nýju breytu og lýsið lögun hennar (2 stig).
+
+```{r}
+ggplot(dat, aes(x=log_audience_count)) + 
+  geom_histogram() + 
+  theme_minimal()
+
+```
+Þetta er samhverf dreifing sem svipar til normaldreifingar, þó með útlögum til hægri.
+
+#2 Breytan smjör kostar
+Breytan tomatometer_status lýsir því hvort kvikmyndin flokkast sem ,,fersk’‘, ,,staðfest fersk’’ eða ,,rotin’’.
+
+  Teiknið viðeigandi graf til að sambandi breytunnar log_audience_count og tomatometer_status (1 stig)
+
+```{r}
+ggplot(dat, aes(x=tomatometer_status, y=log_audience_count)) + 
+  geom_boxplot() + 
+  theme_minimal()
+```
+
+  Kannið með viðeigandi tilgátuprófi hvort það sé samband milli breytanna tveggja. Gætið þess að taka mjög nákvæmlega fram hvaða ályktanir þið dragið (2 stig).
+
+
+```{r}
+mod <- aov(log_audience_count~ tomatometer_status, data=dat)
+anova(mod)
+
+```
+Við framkvæmum fervikagreiningu til að kanna núlltilgátuna hvort meðalfjöldi log_audience_count sé sá sami í öllum þremur hópum tomatometer_status. Við fengum F-gildið 961.9455461 og p-gildið 0. Við höfnum því núlltilgátunni og fullyrðum að meðaltal log_audience_count sé ekki það sama í einhverjum tveimur hópum.
+
+  Getið þið fullyrt hvaða flokkur er með flestar einkunnagjafir per kvikmynd að meðaltali og hvaða flokkur er með fæstar einkunnagjafir per kvikmynd að meðaltali? Rökstyðjið vel svarið ykkar og framkvæmið fleiri tilgátupróf ef með þarf (2 stig).
+
+```{r}
+library(kableExtra)
+dat %>% group_by(tomatometer_status) %>% summarize(medaltal = mean(log_audience_count, na.rm=T)) %>% kable
+
+```
+
+
+```{r}
+
+TukeyHSD(mod)
+```
+Við framkvæmum Tukey eftirápróf til að bera saman meðaltöl log_audience_count milli sérhverra tveggja og tveggja hópa tomatometer_status. Við fáum að meðaltöl allra þriggja hópanna séu ólík, Fresh er með minnsta meðaltalið en Certified Fresh með það stærsta.
+#3 Samband stefnumot og smjor_kostar
+Breytan audience_rating lýsir því hversu góð almenningi fannst myndin.
+
+  Teiknið graf sem lýsir sambandi log_audience_count og audience_rating (1 stig).
+
+```{r}
+ggplot(dat, aes(x=log_audience_count, y=audience_rating)) + 
+  geom_point() + 
+  theme_minimal()
+```
+
+  Kannið með viðeigandi tilgátuprófi samband breytanna log_audience_count og audience_rating. Gætið þess að taka mjög nákvæmlega fram hvaða ályktanir þið dragið (2 stig).
+
+Hér má hvort heldur sem er meta línulegt aðhvarfsgreiningarlíkan og kanna hvort hallatalan aðhvarfslínunnar sé núll eða reikna fylgni milli breytanna tveggja.
+
+Metum fyrst línulegt aðhvarfsgreiningarlíkan
+```{r}
+mod2 <- lm(audience_rating~ log_audience_count, data= dat)
+summary(mod2)
+```
+Hér prófum við núlltilgátuna hvort hallatala aðhvarfslínunnar sem lýsir sambandi log_audience_count og audience_rating sé núll. Við fáum prófstærðina t=20.48 og p-gildi sem er minna en r2*10^{-16}` svo við höfnum núlltilgátunni og fullyrðum að það sé jákvætt samband milli log_audience_count og audience_rating.
+```{r}
+cor.test(dat$audience_rating,dat$log_audience_count)
+```
+Hér prófum við núlltilgátuna hvort fylgni log_audience_count og audience_rating sé núll. Við fáum sama t-gildi og p-gildi og í aðhvarfsgreiningarlíkaninu svo við höfnum núlltilgátunni og fullyrðum að það sé jákvæð fylgni milli log_audience_count og audience_rating.
+
+  Hvað spáið þið að kvikmynd sem 20000 manns gáfu einkunn fái í einkunn á audience_rating. Birtið bæði spána og 95% spábil (2 stig).
+
+Ábending: Ef breytan audience_count tekur gildið 20000 þá tekur breytan log_audience_count gildið log(20000).
+
+Hér verðum við að meta línulegt aðhvarfsgreiningar líkan og fá spágildi út úr því.
+```{r}
+mod2 <- lm(audience_rating~ log_audience_count, data= dat)
+predict(mod2, newdata=data.frame(log_audience_count = log(20000)), interval='prediction')
+```
+Við spáum að kvikmynd sem 20000 manns gáfu einkunn fái 62.3132104 í einkunn með 95% spábil frá 22.7055017 upp í 101.9209191
+#4 Samband messi_staerd og smjor_kostar
+Samband genre og tomatometer_status.
+
+Breytan genre lýsir því af hvaða tegund hver kvikmynd er.
+
+  Búið til nýja breytu sem segir til um hvort orðið ,,Drama’’ kemur einhvers staðar fyrir í lýsingunni á tegund myndarinnar (1 stig). Þessi kóði getur hjálpað ykkur:
+
+
+```{r}
+library(stringr)
+dat <- dat %>% mutate(drama = str_detect(genre, 'Drama'))
+```
+Ef þið náið ekki að búa til þessa breytu, búið þá til breytu sem gefur til kynna tegund myndarinnar sé nákvæmlega “Drama” eða ekki.
+
+  Búið til töflu sem lýsir hlutfalli kvikmynda sem hafa orðið ,,Drama’’ í nafninu eftir tomatometer_status (2 stig).
+
+```{r}
+dat %>% group_by(tomatometer_status) %>%
+  summarize(hlutfall = mean(drama, na.rm=T)) %>%
+  kable()
+```
+
+Kannið með viðeigandi tilgátuprófi samband breytunnar tomatometer_status og þessarar nýju breytu. Gætið þess að taka mjög nákvæmlega fram hvaða ályktanir þið dragið (2 stig).
+
+```{r}
+table(dat$tomatometer_status,dat$drama) %>% prop.test()
+```
+Við framkvæmum kí-kvaðrat próf til að kanna núlltilgátuna hvort hlutfall mynda þar sem orðið ,,Drama’’ kemur einhvers staðar fyrir í lýsingunni á tegund myndarinnar sé það sama í öllum þremur hópum af tomatometer_status. Við fáum kí-kvaðrat gildið 131.39 og p-gildið 2.9478303^{-29} svo við höfnum núlltilgátunni og ályktum að þetta hlutfall sé ólíkt milli a.m.k. einhverra tveggja flokka tomatometer_status.
+

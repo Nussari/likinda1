@@ -1,0 +1,149 @@
+---
+title: "Hópverkefni 1"
+output: rmdformats::readthedown
+date: "2024-01-15"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE,  message = FALSE)
+library(tidyverse)
+```
+
+
+## Liður 1: Gerð breyta
+
+### Lesið inn gögnin og kannið hvort allar breytur séu af réttri gerð að ykkar mati, þ.e.a.s. að talnabreytur séu vistaðar sem talnabreytur og flokkabreytur sem flokkabreytur. Ef einhverjar breytur eru ekki af þeirri gerð sem þið teljið að þær eigi að vera, notið þá R til að kóða þær á réttan hátt.
+
+Gögn lesin inn úr csv skránni með ";" sem seperator, header sýnilegan og "," í stað "." í kommutölum:
+
+```{r}
+dat <- read.table("spurningar_um_lifid_24.csv", header=T, sep=";", dec = ",")
+```
+
+**Að okkar mati eru rektorslaun það eina sem mætti breyta, þau eru lesin inn sem chr en mættu vera int.**
+
+```{r}
+dat$rektor_laun <- as.integer(dat$rektor_laun)
+```
+
+
+## Liður 2: Flokkar flokkabreyta    
+  
+### Veljið eins margar flokkabreytur og eru í hópnum ykkar til að kanna nánar. Eru einhverjar þeirra með óþarflega marga flokka? Ef svo er, búið þá til nýja breytu með færri flokkum þar sem að viðeigandi flokkar hafa verið sameinaðir. R raðar flokkum í stafrófsröð, væri eðlilegra að hafa einhverja aðra röð á flokkunum í flokkabreytunni ykkar? Ef svo, raðið þeim í þá röð.
+
+**Hér fyrir neðan factorum við breyturnar ferdamati_skoli, is, morgunmatur og hljodfaeri:**
+
+```{r}
+dat <- mutate(dat, ferdamati_skoli= factor(ferdamati_skoli))
+dat <- mutate(dat, is = factor(is))
+dat <- mutate(dat, morgunmatur = factor(morgunmatur))
+dat <- mutate(dat, hljodfaeri = factor(hljodfaeri))
+```
+
+**Allir flokkar í völdnu flokkabreytunum eru notaðir og því óþarfi að fjarlægja, eins og sjá má hér að neðan.**
+**Byrjum á að prenta flokka breytanna fyrir breytingar:**
+
+```{r}
+# Prentar "ferdamati_skoli" fyrir breytingar:
+levels(dat$ferdamati_skoli)
+
+# Prentar "morgunmatur" fyrir breytingar:
+levels(dat$morgunmatur)
+
+# Prentar "hljodfaeri" fyrir breytingar:
+levels(dat$hljodfaeri)
+
+# Prentar "is" fyrir breytingar:
+levels(dat$is)
+```
+
+**Eyðum svo ónotuðum flokkum:**
+
+```{r}
+# Eyðir ónotuðum flokkum úr breytunum
+dat$ferdamati_skoli <- droplevels(dat$ferdamati_skoli)
+dat$is <- droplevels(dat$is)
+dat$morgunmatur <- droplevels(dat$morgunmatur)
+dat$hljodfaeri <- droplevels(dat$hljodfaeri)
+```
+
+**Prentum loks flokka breytanna eftir breytingar (enginn munur þar sem allar eru notaðar):**
+```{r}
+# Prentar "ferdamati_skoli" eftir breytingar:
+levels(dat$ferdamati_skoli)
+
+# Prentar "morgunmatur" eftir breytingar:
+levels(dat$morgunmatur)
+
+# Prentar "hljodfaeri" eftir breytingar:
+levels(dat$hljodfaeri)
+
+# Prentar "is" eftir breytingar:
+levels(dat$is)
+```
+
+**Okkur finnst snyrtilegra að raða flokkum í lengdarröð (styst fremst) með þeirri undantekningu að víðasti möguleikinn ætti að vera aftast (oftast "annað" eða eitthvað þess háttar).**
+
+```{r}
+# Breytir röðun og prentar fyrir og eftir
+levels(dat$ferdamati_skoli)
+dat$ferdamati_skoli <- factor(dat$ferdamati_skoli, levels=c("Með strætó", "Með einkabíl", "Gangandi / skokkandi", "Á hjóli / rafhlaupahjóli", "Á annan hátt"))
+levels(dat$ferdamati_skoli)
+
+# Breytir röðun og prentar fyrir og eftir
+levels(dat$is)
+dat$is <- factor(dat$is, levels=c("Vanilla", "Súkkulaði", "Jarðaberja"))
+levels(dat$is)
+
+# Breytir röðun og prentar fyrir og eftir
+levels(dat$morgunmatur)
+dat$morgunmatur <- factor(dat$morgunmatur, levels=c("Rétt", "Rangt"))
+levels(dat$morgunmatur)
+
+# Breytir röðun og prentar fyrir og eftir
+levels(dat$hljodfaeri)
+dat$hljodfaeri <- factor(dat$hljodfaeri, levels=c("Rétt", "Rangt"))
+levels(dat$hljodfaeri)
+```
+
+## Liður 3: Gildi talnabreyta  
+
+### Veljið eins margar talnabreytur og eru í hópnum ykkar til að kanna nánar. Eru einhverjar talnabreytur með óraunhæf gildi? Ef svo er, kóðið þau gildi sem NA.
+
+**Við völdum talnabreyturnar aramotaskaupid, havaxnari, skemmtilegur og likamsraekt_dagar. Við notuðum ifelse sem síu til að skipta óraunhæfum gildum út fyrir NA (með skilyrðum sem henta hverju sinni). Við tókum sérstaklega eftir óraunhæfum gildum í havaxnari: "Anna Helga,Sigrún Helga" og aramotaskaupid: 101.**
+
+```{r}
+# Skiptir gildum yfir 10 út fyrir NA
+dat$aramotaskaupid <- ifelse(dat$aramotaskaupid > 10, NA, dat$aramotaskaupid)
+# Ef lengd strengsins yfir 12 þá NA
+dat$havaxnari <- ifelse(nchar(dat$havaxnari) > 12, NA, dat$havaxnari)
+# Tókum ekki eftir neinum tæpum gögnum í skemmtilegur
+# Ef dagar fleiri en 7 þá NA
+dat$likamsraekt_dagar <- ifelse(dat$likamsraekt_dagar > 7, NA, dat$likamsraekt_dagar)
+```
+
+## Liður 4: Fjöldi svara  
+
+### Hversu mörg svöruðu einhverri spurningu spurningalistans? Hversu mörg voru með nothæf svör við öllum spurningum spurningalistans?
+
+
+```{r}
+# Aðferð til að finna hvort það hafi verið svarað
+vantarsvarpp <- apply(dat, 1, function(x) sum(is.na(x)))
+
+# Teljum hve margir svöruðu ekki og geymum i gildi
+ekkertsvar <- sum(vantarsvarpp == ncol(dat))
+
+# Heildarfjöldi mínus þeir sem svöruðu a.m.k. ekki einni spurningu 
+allirsvar <- nrow(dat) - ekkertsvar
+
+cat("Fjöldi fólks sem svaraði a.m.k. einni spurningu: ", allirsvar, "\n")
+```
+
+```{r}
+# Skipun filterar út alla einstaklinga sem svöruðu allavega einu sinni NA eða/og tómum streng
+dat_filtered <- dat[complete.cases(dat), ]
+
+# Birta niðurstöður
+cat("Fjöldi svara eftir að hafa filterað út NA og/eða tóman streng: ", nrow(dat_filtered), "\n")
+```

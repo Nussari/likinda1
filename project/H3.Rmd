@@ -1,0 +1,141 @@
+---
+title: "Hópverkefni 3"
+output: html_notebook
+---
+
+```{r}
+set.seed(1)
+
+# Liður 1
+
+# Búum til slembin X, Y og Z fyrirbæri með lýsandi líkindadreifingum
+X <- rpois(100000, lambda = 1)
+Y <- rnorm(100000, mean = 1, sd = 10)
+Z <- rbinom(100000, size = 3, prob = 0.1)
+
+# Teikna þéttifall/massafall fyrir X
+hist(X, breaks = 20, col = "skyblue", main = "Þéttifall X (Poisson dreifing)",
+     xlab = "Útkoma", ylab = "Tíðni")
+
+# Teikna þéttifall/massafall fyrir Y
+hist(Y, breaks = 50, col = "deepskyblue", main = "Þéttifall Y (Normaldreifing)",
+     xlab = "Útkoma", ylab = "Tíðni")
+
+# Teikna þéttifall/massafall fyrir Z
+hist(Z, breaks = 20, col = "steelblue", main = "Þéttifall Z (Tvíkostadreifing)",
+     xlab = "Útkoma", ylab = "Tíðni")
+```
+
+
+```{r}
+# Liður 2
+
+dat10 <- data.frame(
+  medal_x = replicate(100000, mean(rnorm(10, 0, 1))),
+  midgildi_x = replicate(100000, median(rnorm(10, 0, 1))),
+  medal_y = replicate(100000, mean(rpois(10, 1))),
+  midgildi_y = replicate(100000, median(rpois(10, 1))),
+  medal_z = replicate(100000, mean(rbinom(10, 3, 0.1))),
+  midgildi_z = replicate(100000, median(rbinom(10, 3, 0.1)))
+)
+
+# Skoðum fyrstu sex línur í gagnatöflunni
+head(dat10)
+```
+
+```{r}
+# Liður 3
+
+par(mfrow = c(3, 2), mar = c(4, 4, 2, 1))
+
+hist(dat10$medal_x, col = "lightgreen", main = "Meðaltal X", xlab = "Meðaltal", ylab = "Fjöldi tilfella")
+hist(dat10$midgildi_x, col = "lightgreen", main = "Miðgildi X", xlab = "Miðgildi", ylab = "Fjöldi tilfella")
+
+hist(dat10$medal_y, col = "forestgreen", main = "Meðaltal Y", xlab = "Meðaltal", ylab = "Fjöldi tilfella")
+hist(dat10$midgildi_y, col = "forestgreen", main = "Miðgildi Y", xlab = "Miðgildi", ylab = "Fjöldi tilfella")
+
+hist(dat10$medal_z, col = "darkgreen", main = "Meðaltal Z", xlab = "Meðaltal", ylab = "Fjöldi tilfella")
+hist(dat10$midgildi_z, col = "darkgreen", main = "Miðgildi Z", xlab = "Miðgildi", ylab = "Fjöldi tilfella")
+
+# Reikna meðaltal fyrir hvern dálk
+meðaltal <- apply(dat10, 2, mean)
+print(meðaltal)
+
+# Reikna dreifni fyrir hvern dálk
+dreifni <- apply(dat10, 2, var)
+print(dreifni)
+```
+
+
+```{r}
+# Liður 4
+set.seed(1)
+
+# Búum til gagnatöflu með tólf dálkum og 100,000 línum
+dat30 <- data.frame(
+  medal_x = replicate(100000, mean(rnorm(30, 0, 1))),
+  midgildi_x = replicate(100000, median(rnorm(30, 0, 1))),
+  medal_y = replicate(100000, mean(rpois(30, 1))),
+  midgildi_y = replicate(100000, median(rpois(30, 1))),
+  medal_z = replicate(100000, mean(rbinom(30, 3, 0.1))),
+  midgildi_z = replicate(100000, median(rbinom(30, 3, 0.1)))
+)
+
+# Teiknum stuðlarit af hverri slembistærð og lýsistærð
+par(mfrow=c(3,2))
+
+# Teiknum stuðlarit af hverri slembistærð og lýsistærð 
+hist(dat30$medal_x, main = "Meðaltal af slembistærð X", col = "lightblue", xlab = "Lýsistærð", ylab = "Fjöldi tilfella")
+hist(dat30$midgildi_x, main = "Miðgildi af slembistærð X", col = "lightcoral", xlab = "Lýsistærð", ylab = "Fjöldi tilfella")
+hist(dat30$medal_y, main = "Meðaltal af slembistærð Y", col = "lightblue", xlab = "Lýsistærð", ylab = "Fjöldi tilfella")
+hist(dat30$midgildi_y, main = "Miðgildi af slembistærð Y", col = "lightcoral", xlab = "Lýsistærð", ylab = "Fjöldi tilfella")
+hist(dat30$medal_z, main = "Meðaltal af slembistærð Z", col = "lightblue", xlab = "Lýsistærð", ylab = "Fjöldi tilfella")
+hist(dat30$midgildi_z, main = "Miðgildi af slembistærð Z", col = "lightcoral", xlab = "Lýsistærð", ylab = "Fjöldi tilfella")
+
+# Reiknum meðaltal og dreifni fyrir hvern dálk
+mean_values_30 <- apply(dat30, 2, mean)
+var_values_30 <- apply(dat30, 2, var)
+
+# Prentum út meðaltöl og dreifni
+
+print(mean_values_30)
+print(var_values_30)
+
+```
+
+```{r}
+set.seed(1)
+
+# Búum til gagnatöflu með tólf dálkum og 100,000 línum
+dat100 <- data.frame(
+  medal_x = replicate(100000, mean(rnorm(100, 0, 1))),
+  midgildi_x = replicate(100000, median(rnorm(100, 0, 1))),
+  medal_y = replicate(100000, mean(rpois(100, 1))),
+  midgildi_y = replicate(100000, median(rpois(100, 1))),
+  medal_z = replicate(100000, mean(rbinom(100, 3, 0.1))),
+  midgildi_z = replicate(100000, median(rbinom(100, 3, 0.1)))
+)
+
+# Teiknum stuðlarit af hverri slembistærð og lýsistærð
+par(mfrow=c(3,2))
+
+# Teiknum stuðlarit af hverri slembistærð og lýsistærð 
+hist(dat100$medal_x, main = "Meðaltal af slembistærð X", col = "lightyellow", xlab = "Lýsistærð", ylab = "Fjöldi tilfella")
+hist(dat100$midgildi_x, main = "Miðgildi af slembistærð X", col = "lightpink", xlab = "Lýsistærð", ylab = "Fjöldi tilfella")
+hist(dat100$medal_y, main = "Meðaltal af slembistærð Y", col = "lightyellow", xlab = "Lýsistærð", ylab = "Fjöldi tilfella")
+hist(dat100$midgildi_y, main = "Miðgildi af slembistærð Y", col = "lightpink", xlab = "Lýsistærð", ylab = "Fjöldi tilfella")
+hist(dat100$medal_z, main = "Meðaltal af slembistærð Z", col = "lightyellow", xlab = "Lýsistærð", ylab = "Fjöldi tilfella")
+hist(dat100$midgildi_z, main = "Miðgildi af slembistærð Z", col = "lightpink", xlab = "Lýsistærð", ylab = "Fjöldi tilfella")
+
+# Reiknum meðaltal og dreifni fyrir hvern dálk
+mean_values_100 <- apply(dat100, 2, mean)
+var_values_100 <- apply(dat100, 2, var)
+
+# Prentum út meðaltöl og dreifni
+print(mean_values_100)
+print(var_values_100)
+
+```
+
+
+
